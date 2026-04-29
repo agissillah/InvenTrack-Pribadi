@@ -29,8 +29,78 @@
             </div>
         @endif
 
-        {{-- Tabel data barang. Dibungkus overflow-x-auto agar tetap aman di layar kecil. --}}
-        <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60">
+        {{-- List card untuk mobile agar lebih rapi. --}}
+        <div class="md:hidden space-y-4">
+            @forelse ($barangs as $barang)
+                <article class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+                    <div class="flex items-start gap-4">
+                        <div class="h-16 w-16 rounded-md border border-slate-700 bg-slate-900/80 flex items-center justify-center overflow-hidden">
+                            @php
+                                $gambarUrl = null;
+
+                                if (!empty($barang->gambar)) {
+                                    $gambarPath = $barang->gambar;
+
+                                    if (\Illuminate\Support\Str::startsWith($gambarPath, ['http://', 'https://'])) {
+                                        $gambarUrl = $gambarPath;
+                                    } else {
+                                        $gambarPath = ltrim($gambarPath, '/');
+                                        $gambarUrl = \Illuminate\Support\Str::startsWith($gambarPath, 'storage/')
+                                            ? asset($gambarPath)
+                                            : asset('storage/' . $gambarPath);
+                                    }
+                                }
+                            @endphp
+                            @if ($gambarUrl)
+                                <button
+                                    type="button"
+                                    data-lightbox-src="{{ $gambarUrl }}"
+                                    data-lightbox-alt="Gambar {{ $barang->nama }}"
+                                    class="inline-flex"
+                                >
+                                    <img src="{{ $gambarUrl }}" alt="Gambar {{ $barang->nama }}" class="h-16 w-16 object-cover">
+                                </button>
+                            @else
+                                <span class="text-xs text-slate-500">No Img</span>
+                            @endif
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-lg font-semibold truncate">{{ $barang->nama }}</h2>
+                            <p class="text-xs text-slate-400">SKU: {{ $barang->sku }}</p>
+                            <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                    <p class="text-slate-400">Stok</p>
+                                    <p class="font-semibold">{{ number_format($barang->stok) }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Harga</p>
+                                    <p class="font-semibold">Rp {{ number_format($barang->harga, 2, ',', '.') }}</p>
+                                </div>
+                            </div>
+                            <p class="mt-3 text-sm text-slate-300">
+                                {{ \Illuminate\Support\Str::limit($barang->deskripsi, 80) }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <a href="{{ route('barang.show', $barang) }}" class="px-3 py-1 rounded border border-cyan-700 text-cyan-300 hover:bg-cyan-500/10">Detail</a>
+                        <a href="{{ route('barang.edit', $barang) }}" class="px-3 py-1 rounded border border-amber-700 text-amber-300 hover:bg-amber-500/10">Edit</a>
+                        <form action="{{ route('barang.destroy', $barang) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus data ini?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="px-3 py-1 rounded border border-red-700 text-red-300 hover:bg-red-500/10">Hapus</button>
+                        </form>
+                    </div>
+                </article>
+            @empty
+                <div class="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-8 text-center text-slate-400">
+                    Belum ada data barang. Klik Tambah Barang untuk mulai input data.
+                </div>
+            @endforelse
+        </div>
+
+        {{-- Tabel data barang untuk layar md ke atas. --}}
+        <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60">
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-900">
                     <tr>
@@ -49,14 +119,30 @@
                         <tr class="border-t border-slate-800">
                             <td class="px-4 py-3 font-semibold">{{ $barang->nama }}</td>
                             <td class="px-4 py-3">
-                                @if ($barang->gambar)
+                                @php
+                                    $gambarUrl = null;
+
+                                    if (!empty($barang->gambar)) {
+                                        $gambarPath = $barang->gambar;
+
+                                        if (\Illuminate\Support\Str::startsWith($gambarPath, ['http://', 'https://'])) {
+                                            $gambarUrl = $gambarPath;
+                                        } else {
+                                            $gambarPath = ltrim($gambarPath, '/');
+                                            $gambarUrl = \Illuminate\Support\Str::startsWith($gambarPath, 'storage/')
+                                                ? asset($gambarPath)
+                                                : asset('storage/' . $gambarPath);
+                                        }
+                                    }
+                                @endphp
+                                @if ($gambarUrl)
                                     <button
                                         type="button"
-                                        data-lightbox-src="{{ asset('storage/' . $barang->gambar) }}"
+                                        data-lightbox-src="{{ $gambarUrl }}"
                                         data-lightbox-alt="Gambar {{ $barang->nama }}"
                                         class="inline-flex"
                                     >
-                                        <img src="{{ asset('storage/' . $barang->gambar) }}" alt="Gambar {{ $barang->nama }}" class="h-12 w-12 rounded-md object-cover border border-slate-700 hover:ring-2 hover:ring-cyan-400/60">
+                                        <img src="{{ $gambarUrl }}" alt="Gambar {{ $barang->nama }}" class="h-12 w-12 rounded-md object-cover border border-slate-700 hover:ring-2 hover:ring-cyan-400/60">
                                     </button>
                                 @else
                                     <span class="text-slate-500">-</span>
@@ -95,10 +181,10 @@
         </div>
     </main>
 
-    <div id="image-lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 px-6">
-        <div class="relative w-full max-w-3xl">
-            <button type="button" data-lightbox-close class="absolute -top-10 right-0 text-sm font-semibold text-slate-200 hover:text-white">Tutup</button>
-            <img id="image-lightbox-img" src="" alt="" class="w-full max-h-[80vh] rounded-xl border border-slate-700 object-contain bg-slate-950">
+    <div id="image-lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 px-6 py-8">
+        <div class="relative inline-flex flex-col items-center">
+            <button type="button" data-lightbox-close class="absolute -top-8 right-0 text-sm font-semibold text-slate-200 hover:text-white">Tutup</button>
+            <img id="image-lightbox-img" src="" alt="" class="max-h-[85vh] max-w-[90vw] w-auto h-auto rounded-xl border border-slate-700 object-contain bg-slate-950">
         </div>
     </div>
 
@@ -128,10 +214,15 @@
                 document.body.classList.remove('overflow-hidden');
             };
 
-            document.querySelectorAll('[data-lightbox-src]').forEach((trigger) => {
-                trigger.addEventListener('click', () => {
-                    openLightbox(trigger.getAttribute('data-lightbox-src'), trigger.getAttribute('data-lightbox-alt'));
-                });
+            document.addEventListener('click', (event) => {
+                const trigger = event.target.closest('[data-lightbox-src]');
+
+                if (!trigger) {
+                    return;
+                }
+
+                event.preventDefault();
+                openLightbox(trigger.getAttribute('data-lightbox-src'), trigger.getAttribute('data-lightbox-alt'));
             });
 
             lightbox.addEventListener('click', (event) => {

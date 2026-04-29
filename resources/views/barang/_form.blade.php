@@ -98,15 +98,31 @@
             <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
         @enderror
 
-        @if (!empty($barang) && $barang->gambar)
+        @php
+            $gambarUrl = null;
+
+            if (!empty($barang) && !empty($barang->gambar)) {
+                $gambarPath = $barang->gambar;
+
+                if (\Illuminate\Support\Str::startsWith($gambarPath, ['http://', 'https://'])) {
+                    $gambarUrl = $gambarPath;
+                } else {
+                    $gambarPath = ltrim($gambarPath, '/');
+                    $gambarUrl = \Illuminate\Support\Str::startsWith($gambarPath, 'storage/')
+                        ? asset($gambarPath)
+                        : asset('storage/' . $gambarPath);
+                }
+            }
+        @endphp
+        @if ($gambarUrl)
             <div class="mt-3 flex items-center gap-4">
                 <button
                     type="button"
-                    data-lightbox-src="{{ asset('storage/' . $barang->gambar) }}"
+                    data-lightbox-src="{{ $gambarUrl }}"
                     data-lightbox-alt="Gambar {{ $barang->nama }}"
                     class="inline-flex"
                 >
-                    <img src="{{ asset('storage/' . $barang->gambar) }}" alt="Gambar {{ $barang->nama }}" class="h-20 w-20 rounded-md object-cover border border-slate-700 hover:ring-2 hover:ring-cyan-400/60">
+                    <img src="{{ $gambarUrl }}" alt="Gambar {{ $barang->nama }}" class="h-20 w-20 rounded-md object-cover border border-slate-700 hover:ring-2 hover:ring-cyan-400/60">
                 </button>
                 <p class="text-xs text-slate-400">Klik gambar untuk lihat ukuran penuh. Upload baru untuk mengganti.</p>
             </div>
@@ -124,10 +140,10 @@
     </div>
 </div>
 
-<div id="image-lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 px-6">
-    <div class="relative w-full max-w-3xl">
-        <button type="button" data-lightbox-close class="absolute -top-10 right-0 text-sm font-semibold text-slate-200 hover:text-white">Tutup</button>
-        <img id="image-lightbox-img" src="" alt="" class="w-full max-h-[80vh] rounded-xl border border-slate-700 object-contain bg-slate-950">
+<div id="image-lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 px-6 py-8">
+    <div class="relative inline-flex flex-col items-center">
+        <button type="button" data-lightbox-close class="absolute -top-8 right-0 text-sm font-semibold text-slate-200 hover:text-white">Tutup</button>
+        <img id="image-lightbox-img" src="" alt="" class="max-h-[85vh] max-w-[90vw] w-auto h-auto rounded-xl border border-slate-700 object-contain bg-slate-950">
     </div>
 </div>
 
@@ -157,10 +173,15 @@
             document.body.classList.remove('overflow-hidden');
         };
 
-        document.querySelectorAll('[data-lightbox-src]').forEach((trigger) => {
-            trigger.addEventListener('click', () => {
-                openLightbox(trigger.getAttribute('data-lightbox-src'), trigger.getAttribute('data-lightbox-alt'));
-            });
+        document.addEventListener('click', (event) => {
+            const trigger = event.target.closest('[data-lightbox-src]');
+
+            if (!trigger) {
+                return;
+            }
+
+            event.preventDefault();
+            openLightbox(trigger.getAttribute('data-lightbox-src'), trigger.getAttribute('data-lightbox-alt'));
         });
 
         lightbox.addEventListener('click', (event) => {
