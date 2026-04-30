@@ -120,7 +120,7 @@ class BarangController extends Controller
      */
     public function destroy(Barang $barang): RedirectResponse
     {
-        if ($barang->gambar) {
+        if ($barang->gambar) {  
             Storage::disk('public')->delete($barang->gambar);
         }
 

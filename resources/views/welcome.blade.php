@@ -161,17 +161,35 @@
 <a class="nav-link" data-nav-link="true" href="#solusi-digital">Solusi Digital</a>
 <a class="nav-link nav-link-active" data-nav-link="true" href="#fitur-utama">Fitur Utama</a>
 </div>
-<!-- Tombol login diarahkan ke named route Laravel: login.admin dan login.kasir. -->
-<div class="hidden md:flex items-center gap-3">
-<a class="bg-[#00D1FF] text-[#004a5d] font-bold px-6 py-2 rounded-md hover:bg-[#00c0ea] transition-all active:scale-95 duration-150" href="{{ route('login.admin') }}">
-                Login Admin
-            </a>
-<a class="border border-[#00D1FF] text-[#00D1FF] font-bold px-6 py-2 rounded-md hover:bg-[#00D1FF]/10 transition-all active:scale-95 duration-150" href="{{ route('login.kasir') }}">
-                Login Kasir
-            </a>
-<a class="border border-[#69f6b8] text-[#69f6b8] font-bold px-6 py-2 rounded-md hover:bg-[#69f6b8]/10 transition-all active:scale-95 duration-150" href="{{ route('barang.index') }}">
-                CRUD Barang
-            </a>
+<!-- Aksi utama dipindah ke menu titik tiga agar navbar tidak tabrakan. -->
+<div class="hidden md:flex items-center relative">
+    <button
+        id="action-menu-button"
+        type="button"
+        aria-controls="action-menu"
+        aria-expanded="false"
+        aria-label="Buka menu aksi"
+        class="inline-flex items-center justify-center w-11 h-11 rounded-md border border-[#00D1FF]/50 text-[#00D1FF] hover:bg-[#00D1FF]/10 transition-colors"
+    >
+        <span class="material-symbols-outlined">more_horiz</span>
+    </button>
+    <div
+        id="action-menu"
+        class="hidden absolute right-0 top-full mt-3 w-64 rounded-xl border border-[#192540] bg-[#0b142b]/95 backdrop-blur-xl p-2 shadow-[0_20px_50px_rgba(6,14,32,0.6)]"
+    >
+        <a class="flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-semibold text-[#00D1FF] hover:bg-[#00D1FF]/10" href="{{ route('login.admin') }}">
+            Login Admin
+        </a>
+        <a class="flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-semibold text-[#7dd3fc] hover:bg-[#00D1FF]/10" href="{{ route('login.kasir') }}">
+            Login Kasir
+        </a>
+        <a class="flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-semibold text-[#69f6b8] hover:bg-[#69f6b8]/10" href="{{ route('purchase-requests.index') }}">
+            CRUD Purchase Request
+        </a>
+        <a class="flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-semibold text-[#f5b66a] hover:bg-[#f5b66a]/10" href="{{ route('purchase-orders.index') }}">
+            CRUD Purchase Order
+        </a>
+    </div>
 </div>
 <button aria-controls="mobile-navbar-menu" aria-expanded="false" aria-label="Buka menu navigasi" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-md border border-[#00D1FF]/50 text-[#00D1FF] hover:bg-[#00D1FF]/10 transition-colors" id="mobile-menu-button" type="button">
 <span class="material-symbols-outlined">more_horiz</span>
@@ -188,8 +206,11 @@
 <a class="border border-[#00D1FF] text-[#00D1FF] text-center font-bold px-4 py-2 rounded-md hover:bg-[#00D1FF]/10 transition-all active:scale-95 duration-150" href="{{ route('login.kasir') }}">
                 Login Kasir
             </a>
-<a class="border border-[#69f6b8] text-[#69f6b8] text-center font-bold px-4 py-2 rounded-md hover:bg-[#69f6b8]/10 transition-all active:scale-95 duration-150" href="{{ route('barang.index') }}">
-                CRUD Barang
+<a class="border border-[#69f6b8] text-[#69f6b8] text-center font-bold px-4 py-2 rounded-md hover:bg-[#69f6b8]/10 transition-all active:scale-95 duration-150" href="{{ route('purchase-requests.index') }}">
+                CRUD Purchase Request
+            </a>
+<a class="border border-[#f5b66a] text-[#f5b66a] text-center font-bold px-4 py-2 rounded-md hover:bg-[#f5b66a]/10 transition-all active:scale-95 duration-150" href="{{ route('purchase-orders.index') }}">
+                CRUD Purchase Order
             </a>
 </div>
 </div>
@@ -504,6 +525,8 @@
             const navLinks = document.querySelectorAll('[data-nav-link]');
             const mobileMenuButton = document.getElementById('mobile-menu-button');
             const mobileMenu = document.getElementById('mobile-navbar-menu');
+            const actionMenuButton = document.getElementById('action-menu-button');
+            const actionMenu = document.getElementById('action-menu');
 
             // Fungsi untuk memindahkan indikator aktif (warna + underline) ke hash target.
             function setActiveLink(targetHash) {
@@ -520,6 +543,15 @@
 
                 mobileMenu.classList.add('hidden');
                 mobileMenuButton.setAttribute('aria-expanded', 'false');
+            }
+
+            function closeActionMenu() {
+                if (!actionMenu || !actionMenuButton) {
+                    return;
+                }
+
+                actionMenu.classList.add('hidden');
+                actionMenuButton.setAttribute('aria-expanded', 'false');
             }
 
             // Saat link diklik, update active state sesuai section tujuan.
@@ -560,6 +592,34 @@
                 window.addEventListener('resize', function () {
                     if (window.innerWidth >= 768) {
                         closeMobileMenu();
+                    }
+                });
+            }
+
+            if (actionMenuButton && actionMenu) {
+                actionMenuButton.addEventListener('click', function () {
+                    const isHidden = actionMenu.classList.contains('hidden');
+
+                    actionMenu.classList.toggle('hidden');
+                    actionMenuButton.setAttribute('aria-expanded', String(isHidden));
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (actionMenu.classList.contains('hidden')) {
+                        return;
+                    }
+
+                    const clickedInsideMenu = actionMenu.contains(event.target);
+                    const clickedMenuButton = actionMenuButton.contains(event.target);
+
+                    if (!clickedInsideMenu && !clickedMenuButton) {
+                        closeActionMenu();
+                    }
+                });
+
+                window.addEventListener('resize', function () {
+                    if (window.innerWidth < 768) {
+                        closeActionMenu();
                     }
                 });
             }
