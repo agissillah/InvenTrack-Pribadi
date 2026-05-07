@@ -14,8 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// ── Purchase Request ──────────────────────────────────────────────────────────
-Route::apiResource('purchase-requests', PurchaseRequestApiController::class);
+Route::name('api.')->group(function () {
+	// ── Purchase Request ──────────────────────────────────────────────────────────
+	Route::apiResource('purchase-requests', PurchaseRequestApiController::class);
 
-// ── Purchase Order ────────────────────────────────────────────────────────────
-Route::apiResource('purchase-orders', PurchaseOrderApiController::class);
+	// ── Purchase Order ────────────────────────────────────────────────────────────
+	Route::apiResource('purchase-orders', PurchaseOrderApiController::class);
+});
